@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spring Boot Google 搜尋</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        #search-container { margin-bottom: 20px; }
+        #results-container { display: flex; flex-direction: column; gap: 15px; }
+        .result-item { padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+        .result-item a { font-size: 1.2em; text-decoration: none; }
+        .result-item p { margin: 5px 0 0; }
+        .result-item .link { font-size: 0.9em; color: green; }
+    </style>
+</head>
+<body>
+
+    <h2>我的 Google 搜尋引擎</h2>
+    
+    <div id="search-container">
+        <input type="text" id="search-query" placeholder="輸入關鍵字...">
+        <button id="search-button">搜尋</button>
+    </div>
+
+    <hr>
+
+    <div id="results-container">
+        </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
