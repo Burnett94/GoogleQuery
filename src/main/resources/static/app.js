@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     async function performSearch() {
-        const query = searchInput.value;
+        const query = searchInput.value.trim();
         if (!query) {
             alert("請輸入搜尋關鍵字");
             return;
@@ -21,16 +21,30 @@ document.addEventListener("DOMContentLoaded", () => {
         // 顯示載入中... (可選)
         resultsContainer.innerHTML = "<p>搜尋中...</p>";
 
+        // 除錯：記錄要搜尋的關鍵字
+        console.log("搜尋關鍵字:", query);
+        const apiUrl = `http://localhost:8080/api/search?q=${encodeURIComponent(query)}`;
+        console.log("API URL:", apiUrl);
+
         try {
             // **關鍵：呼叫我們的 Spring Boot 後端 API**
             // 確保您的 Spring Boot 正在 http://localhost:8080 上運行
-            const response = await fetch(`http://localhost:8080/api/search?q=${encodeURIComponent(query)}`);
+            // 設置 headers 確保正確處理 UTF-8 編碼
+            const response = await fetch(apiUrl, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json; charset=utf-8',
+                    'Content-Type': 'application/json; charset=utf-8'
+                }
+            });
 
             if (!response.ok) {
                 throw new Error(`HTTP 錯誤! 狀態: ${response.status}`);
             }
 
             const data = await response.json(); // 解析 Spring Boot 傳回的 JSON
+            console.log("收到回應:", data);
+            console.log("結果數量:", data.items ? data.items.length : 0);
             
             renderResults(data.items);
 
