@@ -44,10 +44,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const data = await response.json(); // 解析 Spring Boot 傳回的 JSON
             console.log("收到回應:", data);
-            console.log("結果數量:", data.items ? data.items.length : 0);
+            // 後端現在直接返回 ArrayList<SearchItem>，所以 data 本身就是陣列
+            console.log("結果數量:", Array.isArray(data) ? data.length : 0);
             
-            renderResults(data.items);
-
+            renderResults(Array.isArray(data) ? data : []);
+            
         } catch (error) {
             console.error("搜尋時發生錯誤:", error);
             resultsContainer.innerHTML = "<p>搜尋失敗，請查看 console。</p>";
@@ -68,7 +69,20 @@ document.addEventListener("DOMContentLoaded", () => {
             const itemElement = document.createElement("div");
             itemElement.classList.add("result-item");
 
+            // 格式化分數顯示
+            const score = item.score !== undefined ? item.score : 0;
+            const scoreFormatted = score.toFixed(1);
+            
+            // 根據分數決定樣式類別
+            let scoreClass = 'neutral';
+            if (score > 0) {
+                scoreClass = 'positive';
+            } else if (score < 0) {
+                scoreClass = 'negative';
+            }
+
             itemElement.innerHTML = `
+                <div class="score ${scoreClass}">分數: ${scoreFormatted}</div>
                 <a href="${item.link}" target="_blank">${item.title}</a>
                 <div class="link">${item.link}</div>
                 <p>${item.snippet}</p>

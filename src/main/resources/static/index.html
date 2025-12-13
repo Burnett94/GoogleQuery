@@ -8,10 +8,31 @@
         body { font-family: Arial, sans-serif; margin: 20px; }
         #search-container { margin-bottom: 20px; }
         #results-container { display: flex; flex-direction: column; gap: 15px; }
-        .result-item { padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+        .result-item { padding: 10px; border: 1px solid #ccc; border-radius: 5px; position: relative; }
         .result-item a { font-size: 1.2em; text-decoration: none; }
         .result-item p { margin: 5px 0 0; }
         .result-item .link { font-size: 0.9em; color: green; }
+        .result-item .score {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .result-item .score.positive {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+        .result-item .score.negative {
+            background: linear-gradient(135deg, #ee0979 0%, #ff6a00 100%);
+        }
+        .result-item .score.neutral {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
     </style>
 </head>
 <body>

@@ -7,6 +7,7 @@ public class SearchItem {
     private String title;
     private String link;
     private String snippet;
+    private double score;
 
     // --- 省略 Getter 和 Setter ---
     public String getTitle() { return title; }
@@ -15,4 +16,6 @@ public class SearchItem {
     public void setLink(String link) { this.link = link; }
     public String getSnippet() { return snippet; }
     public void setSnippet(String snippet) { this.snippet = snippet; }
+    public double getScore(){return score;}
+    public void setScore(double score){this.score = score;}
 }
