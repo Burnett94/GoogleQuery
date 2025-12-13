@@ -18,8 +18,8 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        // 顯示載入中... (可選)
-        resultsContainer.innerHTML = "<p>搜尋中...</p>";
+        // 顯示載入中...
+        resultsContainer.innerHTML = "<div class='loading'>搜尋中...</div>";
 
         // 除錯：記錄要搜尋的關鍵字
         console.log("搜尋關鍵字:", query);
@@ -51,7 +51,7 @@ document.addEventListener("DOMContentLoaded", () => {
             
         } catch (error) {
             console.error("搜尋時發生錯誤:", error);
-            resultsContainer.innerHTML = "<p>搜尋失敗，請查看 console。</p>";
+            resultsContainer.innerHTML = "<div class='error'>搜尋失敗，請稍後再試。</div>";
         }
     }
 
@@ -60,7 +60,7 @@ document.addEventListener("DOMContentLoaded", () => {
         resultsContainer.innerHTML = "";
 
         if (!items || items.length === 0) {
-            resultsContainer.innerHTML = "<p>找不到相關結果。</p>";
+            resultsContainer.innerHTML = "<div class='no-results'>找不到相關結果。</div>";
             return;
         }
 
