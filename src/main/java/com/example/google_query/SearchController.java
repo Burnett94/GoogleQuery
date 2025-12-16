@@ -207,22 +207,23 @@ public class SearchController {
             
             //建立keyword list
             ArrayList<Keyword> KeywordList = new ArrayList<>();
-          /*  KeywordList.add(new Keyword("連結", -2));
-            KeywordList.add(new Keyword("合作", -2));
-            KeywordList.add(new Keyword("招待", -2));
-            KeywordList.add(new Keyword("折扣碼", -5));
-            KeywordList.add(new Keyword("讀者優惠", -5));
-            KeywordList.add(new Keyword("高CP值", -3));
-            KeywordList.add(new Keyword("排隊", 2));
-            KeywordList.add(new Keyword("不推", 3));
-            KeywordList.add(new Keyword("普通", 3));
-            KeywordList.add(new Keyword("貴", 3));*/ 
-            // 在 SearchController.java 的 search 方法內
-// --- 負面/過濾訊號 (大幅扣分) ---
 KeywordList.add(new Keyword("廣宣", -100)); // 廣告
 KeywordList.add(new Keyword("邀約", -50));  // 業配關鍵字
 KeywordList.add(new Keyword("體驗", -20));  // 軟文常用詞
 KeywordList.add(new Keyword("折扣碼", -50)); // 商業意圖極強
+KeywordList.add(new Keyword("完全沒有雷", -100));
+KeywordList.add(new Keyword("每一道都讓人驚豔", -50));
+KeywordList.add(new Keyword("收藏起來", -30));
+KeywordList.add(new Keyword("下次聚餐就選這間", -30));
+KeywordList.add(new Keyword("留言告訴我你最愛哪一道", -100));
+KeywordList.add(new Keyword("留言告訴我你最愛哪一間", -100));
+KeywordList.add(new Keyword("留言告訴我你最喜歡哪一間", -100));
+KeywordList.add(new Keyword("留言告訴我你最喜歡哪一間", -100));
+KeywordList.add(new Keyword("每個人口味不同", -20));
+KeywordList.add(new Keyword("每個人喜好不同", -20));
+
+
+
 
 // --- 真實負評/平價訊號 (大幅加分 - 因為我們想看真實的，負評最真實) ---
 KeywordList.add(new Keyword("難吃", 15));
@@ -230,13 +231,62 @@ KeywordList.add(new Keyword("不推", 15));
 KeywordList.add(new Keyword("抱怨", 20)); // 文章標題或內容出現抱怨
 KeywordList.add(new Keyword("雷", 10));   // 例如：踩雷、超雷
 KeywordList.add(new Keyword("盤", 10));   // 例如：超盤、盤子 (太貴)
+KeywordList.add(new Keyword("我家", 15));
+KeywordList.add(new Keyword("家", 10));
+KeywordList.add(new Keyword("至少", 15));
+KeywordList.add(new Keyword("蚊子", 15));
+KeywordList.add(new Keyword("XD", 10));
 
 // --- 真實體驗訊號 (中度加分) ---
-KeywordList.add(new Keyword("普通", 5));  // 誠實的評價
+KeywordList.add(new Keyword("普通", 20));  // 誠實的評價
 KeywordList.add(new Keyword("還行", 3));
 KeywordList.add(new Keyword("排隊", 3));  // 描述現場狀況
 KeywordList.add(new Keyword("態度", 5));  // 提到服務態度
-KeywordList.add(new Keyword("回訪", 10)); // 關鍵指標：願不願意再來
+KeywordList.add(new Keyword("回訪", 10)); // 關鍵指標：願不願意再來*/
+KeywordList.add(new Keyword("廣宣", -100)); // 廣告
+KeywordList.add(new Keyword("邀約", -50));  // 業配關鍵字
+KeywordList.add(new Keyword("折扣碼", -50)); // 商業意圖極強
+KeywordList.add(new Keyword("排隊時間", 20));
+KeywordList.add(new Keyword("等待時間", 20));
+KeywordList.add(new Keyword("等很久", 10)); 
+
+
+ // --- 真實負評/平價訊號 (大幅加分 - 因為我們想看真實的，負評最真實) ---
+KeywordList.add(new Keyword("難吃", 15));
+KeywordList.add(new Keyword("不推", 15));
+KeywordList.add(new Keyword("雷", 10));   // 例如：踩雷、超雷
+KeywordList.add(new Keyword("盤", 10));   // 例如：超盤、盤子 (太貴)
+KeywordList.add(new Keyword("貴", 15));     // 提到價格討論
+KeywordList.add(new Keyword("CP值低", 20)); // 直接且負面的價值判斷
+KeywordList.add(new Keyword("等很久", 10)); // 客觀描述用餐痛點
+KeywordList.add(new Keyword("失望", 15));   // 負面情感表達
+KeywordList.add(new Keyword("不會再來", 20)); // 強烈且明確的負面結論
+KeywordList.add(new Keyword("不會特別來", 20));
+KeywordList.add(new Keyword("不會特地來", 20));
+KeywordList.add(new Keyword("不用特別來", 20));
+KeywordList.add(new Keyword("不用特地來", 20));
+KeywordList.add(new Keyword("不用特別排", 20));
+
+// --- 真實體驗訊號 (中度加分) ---
+KeywordList.add(new Keyword("普通", 5));  // 誠實的評價
+KeywordList.add(new Keyword("還行", 5));
+KeywordList.add(new Keyword("態度", 5));  // 提到服務態度
+KeywordList.add(new Keyword("回訪", 10)); 
+
+// --- PTT 鄉民用語 (高真實度的情緒表達) ---
+KeywordList.add(new Keyword("大推", 6));    // 比普通推薦更強
+KeywordList.add(new Keyword("神", 10));      // 例如：神店、神之料理
+KeywordList.add(new Keyword("屌打", 9));    // 比較級，例如：屌打X店 (表示這家很強)
+KeywordList.add(new Keyword("頂", 8));       // 近期流行語，表示頂尖
+
+// --- 一般正面體驗 (中度加分，需小心業配混用) ---
+KeywordList.add(new Keyword("驚艷", 5));     // 超出預期
+KeywordList.add(new Keyword("CP值高", 6));   // PTT 最在意的性價比
+KeywordList.add(new Keyword("吃得飽", 5));   // 份量足夠，鄉民很在意
+KeywordList.add(new Keyword("不錯", 5));     // 保守但正面的評價
+KeywordList.add(new Keyword("喜歡", 3));     // 普通正面
+KeywordList.add(new Keyword("好喝", 3));     // 普通正面
+KeywordList.add(new Keyword("好吃", 3));     // *注意*：這是業配最愛用的詞，權重建議給低一點
 
 // --- 標題結構判定 (需稍微修改邏輯) ---
 // 註：這部分建議直接在迴圈內判斷 item.getTitle()，而不只是用 WordCounter 算內文
@@ -256,22 +306,21 @@ KeywordList.add(new Keyword("回訪", 10)); // 關鍵指標：願不願意再來
                 logger.info("URL: {}", webURL);
                 logger.info("");
                 
+                StringBuilder sb = new StringBuilder();
                 for (int j = 0; j < KeywordList.size(); j++) {
                     try {
                         Keyword keyword = KeywordList.get(j);
                         int count = counter.countKeyword(keyword.getName());
                         double contribution = count * keyword.getWeight();
-                        
+
                         if (count > 0) {
-                            // 記錄有貢獻的關鍵字
-                            String detail = String.format("\"%s\" * %d (權重: %.0f) = %.1f", 
+                            // 收集簡潔明細
+                            String detail = String.format("%s:%d*%.1f=%.1f", 
                                 keyword.getName(), count, keyword.getWeight(), contribution);
-                            scoreDetails.add(detail);
-                            String contributionStr = String.format("%.1f", contribution);
-                            logger.info("  {}: 出現 {} 次 × 權重 {} = {} 分", 
-                                keyword.getName(), count, (int)keyword.getWeight(), contributionStr);
+                            if (sb.length() > 0) sb.append(", ");
+                            sb.append(detail);
                         }
-                        
+
                         totalScore += contribution;
                     } catch (IOException e) {
                         logger.warn("");
@@ -279,25 +328,16 @@ KeywordList.add(new Keyword("回訪", 10)); // 關鍵指標：願不願意再來
                             KeywordList.get(j).getName(), webURL, e.getMessage());
                     }
                 }
-                
-                logger.info("");
-                
-                // 如果沒有任何關鍵字匹配，記錄為 0 分
-                if (scoreDetails.isEmpty()) {
-                    logger.info("  無匹配關鍵字，得分: 0.0");
-                    logger.info("");
-                }
-                
+
                 item.setScore(totalScore);
                 String totalScoreStr = String.format("%.1f", totalScore);
-                logger.info("總分: {}", totalScoreStr);
-                logger.info("");
-                
-                // 輸出分數明細摘要（用於快速查看）
-                if (!scoreDetails.isEmpty()) {
-                    logger.info("分數明細: {}", String.join(", ", scoreDetails));
-                    logger.info("");
+                if (sb.length() == 0) {
+                    logger.info("總分: {}", totalScoreStr);
+                    logger.info("  無匹配關鍵字");
+                } else {
+                    logger.info("總分: {} | 明細: {}", totalScoreStr, sb.toString());
                 }
+                logger.info("");
                 logger.info("==========================================");
                 logger.info("");
             }
