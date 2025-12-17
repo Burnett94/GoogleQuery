@@ -3,6 +3,8 @@ package com.example.google_query;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -125,73 +127,73 @@ public class SearchController {
     }
 
     /**
-     * 初始化關鍵字列表及其權重
+     * 初始化關鍵字列表及其權重 (使用 Map 結構：關鍵字名稱 -> 權重)
      */
-    private ArrayList<Keyword> initializeKeywordList() {
-        ArrayList<Keyword> keywordList = new ArrayList<>();
+    private Map<String, Float> initializeKeywordMap() {
+        Map<String, Float> keywordMap = new HashMap<>();
 
         // --- 業配/廣告訊號 (負分) ---
-        keywordList.add(new Keyword("廣宣", -100));
-        keywordList.add(new Keyword("邀約", -50));
-        keywordList.add(new Keyword("體驗", -20));
-        keywordList.add(new Keyword("折扣碼", -50));
-        keywordList.add(new Keyword("完全沒有雷", -100));
-        keywordList.add(new Keyword("每一道都讓人驚豔", -50));
-        keywordList.add(new Keyword("收藏起來", -30));
-        keywordList.add(new Keyword("下次聚餐就選這間", -30));
-        keywordList.add(new Keyword("留言告訴我你最愛哪一道", -100));
-        keywordList.add(new Keyword("留言告訴我你最愛哪一間", -100));
-        keywordList.add(new Keyword("留言告訴我你最喜歡哪一間", -100));
-        keywordList.add(new Keyword("每個人口味不同", -20));
-        keywordList.add(new Keyword("每個人喜好不同", -20));
+        keywordMap.put("廣宣", -100f);
+        keywordMap.put("邀約", -50f);
+        keywordMap.put("體驗", -20f);
+        keywordMap.put("折扣碼", -50f);
+        keywordMap.put("完全沒有雷", -100f);
+        keywordMap.put("每一道都讓人驚豔", -50f);
+        keywordMap.put("收藏起來", -30f);
+        keywordMap.put("下次聚餐就選這間", -30f);
+        keywordMap.put("留言告訴我你最愛哪一道", -100f);
+        keywordMap.put("留言告訴我你最愛哪一間", -100f);
+        keywordMap.put("留言告訴我你最喜歡哪一間", -100f);
+        keywordMap.put("每個人口味不同", -20f);
+        keywordMap.put("每個人喜好不同", -20f);
 
         // --- 真實負評/平價訊號 (大幅加分) ---
-        keywordList.add(new Keyword("難吃", 15));
-        keywordList.add(new Keyword("不推", 15));
-        keywordList.add(new Keyword("抱怨", 20));
-        keywordList.add(new Keyword("雷", 10));
-        keywordList.add(new Keyword("盤", 10));
-        keywordList.add(new Keyword("貴", 15));
-        keywordList.add(new Keyword("CP值低", 20));
-        keywordList.add(new Keyword("失望", 15));
-        keywordList.add(new Keyword("不會再來", 20));
-        keywordList.add(new Keyword("不會特別來", 20));
-        keywordList.add(new Keyword("不會特地來", 20));
-        keywordList.add(new Keyword("不用特別來", 20));
-        keywordList.add(new Keyword("不用特地來", 20));
-        keywordList.add(new Keyword("不用特別排", 20));
-        keywordList.add(new Keyword("我家", 15));
-        keywordList.add(new Keyword("家", 10));
-        keywordList.add(new Keyword("至少", 15));
-        keywordList.add(new Keyword("蚊子", 15));
-        keywordList.add(new Keyword("XD", 10));
+        keywordMap.put("難吃", 15f);
+        keywordMap.put("不推", 15f);
+        keywordMap.put("抱怨", 20f);
+        keywordMap.put("雷", 10f);
+        keywordMap.put("盤", 10f);
+        keywordMap.put("貴", 15f);
+        keywordMap.put("CP值低", 20f);
+        keywordMap.put("失望", 15f);
+        keywordMap.put("不會再來", 20f);
+        keywordMap.put("不會特別來", 20f);
+        keywordMap.put("不會特地來", 20f);
+        keywordMap.put("不用特別來", 20f);
+        keywordMap.put("不用特地來", 20f);
+        keywordMap.put("不用特別排", 20f);
+        keywordMap.put("我家", 15f);
+        keywordMap.put("家", 10f);
+        keywordMap.put("至少", 15f);
+        keywordMap.put("蚊子", 15f);
+        keywordMap.put("XD", 10f);
 
         // --- 真實體驗訊號 (中度加分) ---
-        keywordList.add(new Keyword("普通", 20));
-        keywordList.add(new Keyword("還行", 5));
-        keywordList.add(new Keyword("排隊", 3));
-        keywordList.add(new Keyword("排隊時間", 20));
-        keywordList.add(new Keyword("等待時間", 20));
-        keywordList.add(new Keyword("等很久", 10));
-        keywordList.add(new Keyword("態度", 5));
-        keywordList.add(new Keyword("回訪", 10));
+        keywordMap.put("普通", 20f);
+        keywordMap.put("還行", 5f);
+        keywordMap.put("排隊", 3f);
+        keywordMap.put("排隊時間", 20f);
+        keywordMap.put("等待時間", 20f);
+        keywordMap.put("等很久", 10f);
+        keywordMap.put("態度", 5f);
+        keywordMap.put("回訪", 10f);
 
         // --- PTT 鄉民用語 (高真實度的情緒表達) ---
-        keywordList.add(new Keyword("大推", 6));
-        keywordList.add(new Keyword("神", 10));
-        keywordList.add(new Keyword("屌打", 9));
-        keywordList.add(new Keyword("頂", 8));
+        keywordMap.put("大推", 6f);
+        keywordMap.put("神", 10f);
+        keywordMap.put("屌打", 9f);
+        keywordMap.put("頂", 8f);
 
         // --- 一般正面體驗 (中度加分，需小心業配混用) ---
-        keywordList.add(new Keyword("驚艷", 5));
-        keywordList.add(new Keyword("CP值高", 6));
-        keywordList.add(new Keyword("吃得飽", 5));
-        keywordList.add(new Keyword("不錯", 5));
-        keywordList.add(new Keyword("喜歡", 3));
-        keywordList.add(new Keyword("好喝", 3));
-        keywordList.add(new Keyword("好吃", 3));
+        keywordMap.put("驚艷", 5f);
+        keywordMap.put("CP值高", 6f);
+        keywordMap.put("吃得飽", 5f);
+        keywordMap.put("不錯", 5f);
+        keywordMap.put("喜歡", 3f);
+        keywordMap.put("好喝", 3f);
+        keywordMap.put("好吃", 3f);
 
-        return keywordList;
+        return keywordMap;
     }
 
     /**
@@ -267,8 +269,8 @@ public class SearchController {
             ArrayList<SearchItem> filteredItems = new ArrayList<>(response.getItems());
             logger.info("保留所有 {} 筆搜尋結果（已取消 PTT 限制）", filteredItems.size());
 
-            // 初始化關鍵字列表
-            ArrayList<Keyword> keywordList = initializeKeywordList();
+            // 初始化關鍵字 Map (關鍵字名稱 -> 權重)
+            Map<String, Float> keywordMap = initializeKeywordMap();
 
             // 計算分數（只對過濾後的結果計算）
             logger.info("開始處理 {} 筆搜尋結果，計算分數...", filteredItems.size());
@@ -289,18 +291,22 @@ public class SearchController {
                     int matchedKeywordCount = 0; // 記錄匹配到的關鍵字數量
 
                     StringBuilder sb = new StringBuilder();
-                    ArrayList<String> matchedKeywords = new ArrayList<>(); // 記錄匹配到的關鍵字名稱
+                    Map<String, Integer> matchedKeywords = new HashMap<>(); // 記錄匹配到的關鍵字名稱和次數 (關鍵字名稱 -> 出現次數)
                     
-                    for (Keyword keyword : keywordList) {
+                    // 遍歷關鍵字 Map
+                    for (Map.Entry<String, Float> entry : keywordMap.entrySet()) {
+                        String keywordName = entry.getKey();
+                        float keywordWeight = entry.getValue();
+                        
                         try {
-                            int count = counter.countKeyword(keyword.getName());
-                            double contribution = count * keyword.getWeight();
+                            int count = counter.countKeyword(keywordName);
+                            double contribution = count * keywordWeight;
 
                             if (count > 0) {
                                 matchedKeywordCount++; // 如果有匹配到，增加計數
-                                matchedKeywords.add(keyword.getName()); // 記錄關鍵字名稱
+                                matchedKeywords.put(keywordName, count); // 記錄關鍵字名稱和出現次數
                                 String detail = String.format("%s:%d*%.1f=%.1f",
-                                        keyword.getName(), count, keyword.getWeight(), contribution);
+                                        keywordName, count, keywordWeight, contribution);
                                 if (sb.length() > 0) {
                                     sb.append(", ");
                                 }
@@ -309,7 +315,7 @@ public class SearchController {
 
                             totalScore += contribution;
                         } catch (IOException e) {
-                            logger.debug("計算關鍵字 '{}' 時發生錯誤: {}", keyword.getName(), e.getMessage());
+                            logger.debug("計算關鍵字 '{}' 時發生錯誤: {}", keywordName, e.getMessage());
                         }
                     }
 
