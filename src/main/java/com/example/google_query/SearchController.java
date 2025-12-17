@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +21,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * 搜尋控制器
- * 提供 Google 自訂搜尋 API 的 REST 端點
+ * 提供 Google 自訂搜尋 API 的 REST 端點以及子網頁搜尋功能
  */
 @RestController
 @RequestMapping("/api")
@@ -37,12 +38,8 @@ public class SearchController {
 
     private final RestTemplate restTemplate;
 
-    /**
-     * 建構函數：配置 RestTemplate 以支援 UTF-8 編碼
-     */
     public SearchController() {
         this.restTemplate = new RestTemplate();
-        // 設置 StringHttpMessageConverter 使用 UTF-8 編碼
         restTemplate.getMessageConverters().stream()
                 .filter(converter -> converter instanceof StringHttpMessageConverter)
                 .forEach(converter -> {
@@ -51,9 +48,6 @@ public class SearchController {
                 });
     }
 
-    /**
-     * 合併兩個已排序的列表
-     */
     public ArrayList<SearchItem> merge(ArrayList<SearchItem> left, ArrayList<SearchItem> right) {
         ArrayList<SearchItem> result = new ArrayList<>();
         int i = 0, j = 0;
@@ -68,7 +62,6 @@ public class SearchController {
             }
         }
 
-        // 把剩下的加進去
         while (i < left.size()) {
             result.add(left.get(i));
             i++;
@@ -80,9 +73,6 @@ public class SearchController {
         return result;
     }
 
-    /**
-     * 合併排序演算法
-     */
     public ArrayList<SearchItem> mergeSort(ArrayList<SearchItem> items) {
         if (items.size() <= 1) {
             return items;
@@ -94,23 +84,13 @@ public class SearchController {
         }
     }
 
-    /**
-     * 增強查詢字串，自動添加餐廳相關關鍵字
-     * 如果查詢中已經包含餐廳相關詞彙，則不重複添加
-     * 注意：目前僅對中文查詢添加中文關鍵字，避免對其他語言查詢造成干擾
-     */
     private String enhanceQueryForRestaurants(String originalQuery) {
-        // 檢查是否包含中文字符
         boolean hasChinese = originalQuery.chars().anyMatch(ch -> ch >= 0x4E00 && ch <= 0x9FFF);
-        
-        // 如果查詢不是中文，直接返回原始查詢（避免添加不相關的中文關鍵字）
         if (!hasChinese) {
             return originalQuery;
         }
         
         String[] restaurantKeywords = {"餐廳", "美食", "小吃", "推薦", "必吃", "食記", "料理", "菜單"};
-
-        // 檢查原始查詢是否已經包含餐廳相關關鍵字
         boolean hasRestaurantKeyword = false;
         for (String keyword : restaurantKeywords) {
             if (originalQuery.contains(keyword)) {
@@ -122,14 +102,9 @@ public class SearchController {
         if (hasRestaurantKeyword) {
             return originalQuery;
         }
-
         return originalQuery + " 餐廳 推薦";
     }
 
-    /**
-     * 初始化關鍵字列表及其權重 (使用 Map 結構：關鍵字名稱 -> 權重)
-     * 所有權重值已除以10
-     */
     private Map<String, Float> initializeKeywordMap() {
         Map<String, Float> keywordMap = new HashMap<>();
 
@@ -198,35 +173,126 @@ public class SearchController {
     }
 
     /**
-     * 搜尋端點
-     * 接收查詢參數，呼叫 Google Custom Search API，並對結果進行評分和排序
+     * 子網頁搜尋 API
+     * 接收一個 parentUrl，抓取其底下的連結並進行評分排序
+     */
+    @GetMapping("/subsearch")
+    public ArrayList<SearchItem> subSearch(@RequestParam(value = "url") String parentUrl) {
+        logger.info("============== 開始子網頁搜尋 ==============");
+        logger.info("母網頁: {}", parentUrl);
+        
+        ArrayList<SearchItem> subItems = new ArrayList<>();
+        
+        // 驗證 URL
+        if(parentUrl == null || parentUrl.isEmpty()) {
+            return subItems;
+        }
+        if(!parentUrl.startsWith("http")) {
+            parentUrl = "https://" + parentUrl;
+        }
+
+        try {
+            // 1. 抓取母網頁並分析連結
+            WordCounter parentCounter = new WordCounter(parentUrl);
+            Set<String> links = parentCounter.getHyperlinks();
+            
+            logger.info("在母網頁中找到 {} 個連結", links.size());
+
+            // 2. 限制處理的子網頁數量 (避免請求太久導致 Timeout)
+            int limit = 10; 
+            int count = 0;
+
+            Map<String, Float> keywordMap = initializeKeywordMap();
+            
+            for (String link : links) {
+                if (count >= limit) break;
+                // 排除連回母網頁自己的連結，或太短的連結
+                if (link.equals(parentUrl) || link.length() < 10) continue;
+
+                SearchItem item = new SearchItem();
+                item.setLink(link);
+                item.setTitle("子網頁-" + (count + 1)); 
+                
+                // 3. 計算該子網頁的分數
+                try {
+                    WordCounter childCounter = new WordCounter(link);
+                    double totalScore = 0.0;
+                    int matchedKeywordCount = 0;
+
+                    for (Map.Entry<String, Float> entry : keywordMap.entrySet()) {
+                        String keyword = entry.getKey();
+                        float weight = entry.getValue();
+                        
+                        try {
+                            int kCount = childCounter.countKeyword(keyword);
+                            if (kCount > 0) {
+                                totalScore += kCount * weight;
+                                matchedKeywordCount++;
+                            }
+                        } catch (Exception e) {
+                           // 忽略單一關鍵字錯誤
+                        }
+                    }
+                    
+                    // 計算平均分
+                    double finalScore = matchedKeywordCount > 0 ? totalScore / matchedKeywordCount : 0.0;
+                    item.setScore(finalScore);
+                    
+                    // --- 即時 Log 顯示進度 ---
+                    logger.info("[{}/{}] 處理中: 分數={}\t網址={}", 
+                        count + 1, limit, String.format("%.2f", finalScore), link);
+
+                    subItems.add(item);
+                    count++;
+
+                } catch (Exception e) {
+                    logger.warn("無法讀取子網頁: {} ({})", link, e.getMessage());
+                }
+            }
+
+        } catch (Exception e) {
+            logger.error("子網頁搜尋發生錯誤: ", e);
+        }
+
+        // 4. 排序
+        ArrayList<SearchItem> sortedList = mergeSort(subItems);
+
+        // --- 在 Terminal 顯示最終排行榜 ---
+        logger.info("\n\n");
+        logger.info("============== 子網頁分數排行榜 ==============");
+        if (sortedList.isEmpty()) {
+            logger.info("沒有找到有效的子網頁或無法計算分數。");
+        } else {
+            for (int i = 0; i < sortedList.size(); i++) {
+                SearchItem item = sortedList.get(i);
+                // 格式：排名. [分數] 網址
+                logger.info("No.{}\t[{}]\t{}", 
+                    i + 1, 
+                    String.format("%.2f", item.getScore()), 
+                    item.getLink());
+            }
+        }
+        logger.info("==========================================\n");
+
+        return sortedList;
+    }
+
+    /**
+     * 主搜尋端點
      */
     @GetMapping("/search")
     public ArrayList<SearchItem> search(@RequestParam(value = "q", required = false) String query) {
-        // 記錄接收到的查詢參數（用於除錯編碼）
         if (query != null) {
             logger.info("收到搜尋查詢: {}", query);
-            logger.info("查詢參數長度: {} 字符", query.length());
-            boolean hasChinese = query.chars().anyMatch(ch -> ch >= 0x4E00 && ch <= 0x9FFF);
-            boolean hasNonASCII = query.chars().anyMatch(ch -> ch > 127);
-            logger.info("包含中文字符: {}, 包含非ASCII字符: {}", hasChinese, hasNonASCII);
         }
 
         if (query == null || query.trim().isEmpty()) {
-            logger.warn("查詢參數為空");
             return new ArrayList<>();
         }
 
-        // 增強查詢：自動添加餐廳相關關鍵字
-        String enhancedQuery = enhanceQueryForRestaurants(query.trim());
-        String finalQuery = enhancedQuery;
-        
-        logger.info("原始查詢: {}, 增強後查詢: {}", query, finalQuery);
-
-        // Google Custom Search API 的 URL
+        String finalQuery = enhanceQueryForRestaurants(query.trim());
         String url = "https://www.googleapis.com/customsearch/v1";
 
-        // 建立帶有查詢參數的 URL，確保正確編碼（支援中文）
         String apiUrl = UriComponentsBuilder.fromUriString(url)
                 .queryParam("key", apiKey)
                 .queryParam("cx", cx)
@@ -235,145 +301,53 @@ public class SearchController {
                 .build()
                 .toUriString();
 
-        logger.info("發送到 Google API 的 URL: {}", apiUrl.replace(apiKey, "API_KEY_HIDDEN"));
-
         try {
-            logger.info("開始呼叫 Google Custom Search API...");
-            // 呼叫 Google API 並指定回應應映射到我們的 POJO
-            GoogleSearchResponse response = restTemplate.getForObject(
-                    apiUrl,
-                    GoogleSearchResponse.class);
+            GoogleSearchResponse response = restTemplate.getForObject(apiUrl, GoogleSearchResponse.class);
 
-            if (response == null) {
-                logger.error("Google API 返回 null 回應");
-                return new ArrayList<>();
-            }
-            
-            if (response.getItems() == null) {
-                logger.error("Google API 回應的 items 為 null");
-                return new ArrayList<>();
-            }
-            
-            if (response.getItems().isEmpty()) {
-                logger.warn("Google API 返回空結果列表");
+            if (response == null || response.getItems() == null || response.getItems().isEmpty()) {
                 return new ArrayList<>();
             }
 
-            logger.info("收到 {} 筆原始搜尋結果", response.getItems().size());
-            // 記錄前幾筆結果的 URL 以便除錯
-            int debugCount = Math.min(3, response.getItems().size());
-            for (int i = 0; i < debugCount; i++) {
-                logger.info("  結果 {}: {} - {}", i + 1, response.getItems().get(i).getTitle(), response.getItems().get(i).getLink());
-            }
-
-            // 不再進行 PTT 過濾，保留所有搜尋結果
-            ArrayList<SearchItem> filteredItems = new ArrayList<>(response.getItems());
-            logger.info("保留所有 {} 筆搜尋結果（已取消 PTT 限制）", filteredItems.size());
-
-            // 初始化關鍵字 Map (關鍵字名稱 -> 權重)
+            ArrayList<SearchItem> items = new ArrayList<>(response.getItems());
             Map<String, Float> keywordMap = initializeKeywordMap();
-
-            // 計算分數（只對過濾後的結果計算）
-            logger.info("開始處理 {} 筆搜尋結果，計算分數...", filteredItems.size());
             ArrayList<SearchItem> validItems = new ArrayList<>();
-            int successCount = 0;
-            int failCount = 0;
-            
-            for (int idx = 0; idx < filteredItems.size(); idx++) {
-                SearchItem item = filteredItems.get(idx);
-                String webURL = item.getLink();
-                String title = item.getTitle() != null ? item.getTitle() : "無標題";
 
-                logger.info("[{}/{}] 處理: {}", idx + 1, filteredItems.size(), title);
-                
+            for (SearchItem item : items) {
                 try {
-                    WordCounter counter = new WordCounter(webURL);
+                    WordCounter counter = new WordCounter(item.getLink());
                     double totalScore = 0.0;
-                    int matchedKeywordCount = 0; // 記錄匹配到的關鍵字數量
+                    int matchedKeywordCount = 0;
 
-                    StringBuilder sb = new StringBuilder();
-                    Map<String, Integer> matchedKeywords = new HashMap<>(); // 記錄匹配到的關鍵字名稱和次數 (關鍵字名稱 -> 出現次數)
-                    
-                    // 遍歷關鍵字 Map
                     for (Map.Entry<String, Float> entry : keywordMap.entrySet()) {
-                        String keywordName = entry.getKey();
-                        float keywordWeight = entry.getValue();
-                        
                         try {
-                            int count = counter.countKeyword(keywordName);
-                            double contribution = count * keywordWeight;
-
+                            int count = counter.countKeyword(entry.getKey());
                             if (count > 0) {
-                                matchedKeywordCount++; // 如果有匹配到，增加計數
-                                matchedKeywords.put(keywordName, count); // 記錄關鍵字名稱和出現次數
-                                String detail = String.format("%s:%d*%.1f=%.1f",
-                                        keywordName, count, keywordWeight, contribution);
-                                if (sb.length() > 0) {
-                                    sb.append(", ");
-                                }
-                                sb.append(detail);
+                                totalScore += count * entry.getValue();
+                                matchedKeywordCount++;
                             }
-
-                            totalScore += contribution;
                         } catch (IOException e) {
-                            logger.debug("計算關鍵字 '{}' 時發生錯誤: {}", keywordName, e.getMessage());
+                            // ignore
                         }
                     }
 
-                    // 計算平均分數：總分除以匹配到的關鍵字數量
-                    double finalScore = totalScore;
-                    if (matchedKeywordCount > 0) {
-                        finalScore = totalScore / matchedKeywordCount;
-                        logger.info("  原始總分: {}, 匹配關鍵字數: {}, 匹配到的關鍵字: {}, 平均分數: {}", 
-                                String.format("%.1f", totalScore), matchedKeywordCount, matchedKeywords.toString(), String.format("%.1f", finalScore));
-                    } else {
-                        logger.info("  原始總分: {}, 匹配關鍵字數: 0, 平均分數: {}", 
-                                String.format("%.1f", totalScore), String.format("%.1f", finalScore));
-                        logger.warn("  警告：此網頁沒有匹配到任何關鍵字！");
-                    }
-
+                    double finalScore = matchedKeywordCount > 0 ? totalScore / matchedKeywordCount : 0.0;
                     item.setScore(finalScore);
-                    successCount++;
-                    String scoreStr = String.format("%.1f", finalScore);
-                    logger.info("  成功計算分數（平均分）: {}", scoreStr);
-                    
-                    // 只有成功處理的項目才加入列表
                     validItems.add(item);
+
                 } catch (Exception e) {
-                    failCount++;
-                    logger.warn("  無法處理項目 (URL: {}): {}", webURL, e.getClass().getSimpleName() + ": " + e.getMessage());
-                    // 即使無法訪問網頁，仍然保留該項目，但分數為 0（讓用戶至少能看到搜尋結果）
                     item.setScore(0.0);
                     validItems.add(item);
                 }
             }
-            
-            logger.info("處理完成: 成功 {} 筆，失敗 {} 筆，總共 {} 筆", successCount, failCount, validItems.size());
 
-            if (validItems.isEmpty()) {
-                logger.warn("處理後沒有有效結果（共處理 {} 筆，全部失敗）", filteredItems.size());
-                // 如果所有結果都無法處理，至少返回原始結果（不計算分數）
-                for (SearchItem item : filteredItems) {
-                    item.setScore(0.0);
-                    validItems.add(item);
-                }
-                logger.info("返回原始搜尋結果（未計算分數）");
-            }
-            
-            // 使用 MergeSort 排序
             ArrayList<SearchItem> sortedList = mergeSort(validItems);
-
-            // 確保只返回最多 10 筆結果
             if (sortedList.size() > 10) {
                 sortedList = new ArrayList<>(sortedList.subList(0, 10));
             }
 
-            logger.info("排序完成，返回 {} 筆結果（限制為 10 筆）", sortedList.size());
-
             return sortedList;
 
         } catch (Exception e) {
-            logger.error("搜尋時發生錯誤: ", e);
             e.printStackTrace();
             return new ArrayList<>();
         }
