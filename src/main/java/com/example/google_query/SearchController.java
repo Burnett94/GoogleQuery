@@ -128,70 +128,71 @@ public class SearchController {
 
     /**
      * 初始化關鍵字列表及其權重 (使用 Map 結構：關鍵字名稱 -> 權重)
+     * 所有權重值已除以10
      */
     private Map<String, Float> initializeKeywordMap() {
         Map<String, Float> keywordMap = new HashMap<>();
 
         // --- 業配/廣告訊號 (負分) ---
-        keywordMap.put("廣宣", -100f);
-        keywordMap.put("邀約", -50f);
-        keywordMap.put("體驗", -20f);
-        keywordMap.put("折扣碼", -50f);
-        keywordMap.put("完全沒有雷", -100f);
-        keywordMap.put("每一道都讓人驚豔", -50f);
-        keywordMap.put("收藏起來", -30f);
-        keywordMap.put("下次聚餐就選這間", -30f);
-        keywordMap.put("留言告訴我你最愛哪一道", -100f);
-        keywordMap.put("留言告訴我你最愛哪一間", -100f);
-        keywordMap.put("留言告訴我你最喜歡哪一間", -100f);
-        keywordMap.put("每個人口味不同", -20f);
-        keywordMap.put("每個人喜好不同", -20f);
+        keywordMap.put("廣宣", -10f);
+        keywordMap.put("邀約", -5f);
+        keywordMap.put("體驗", -2f);
+        keywordMap.put("折扣碼", -5f);
+        keywordMap.put("完全沒有雷", -10f);
+        keywordMap.put("每一道都讓人驚豔", -5f);
+        keywordMap.put("收藏起來", -3f);
+        keywordMap.put("下次聚餐就選這間", -3f);
+        keywordMap.put("留言告訴我你最愛哪一道", -10f);
+        keywordMap.put("留言告訴我你最愛哪一間", -10f);
+        keywordMap.put("留言告訴我你最喜歡哪一間", -10f);
+        keywordMap.put("每個人口味不同", -2f);
+        keywordMap.put("每個人喜好不同", -2f);
 
         // --- 真實負評/平價訊號 (大幅加分) ---
-        keywordMap.put("難吃", 15f);
-        keywordMap.put("不推", 15f);
-        keywordMap.put("抱怨", 20f);
-        keywordMap.put("雷", 10f);
-        keywordMap.put("盤", 10f);
-        keywordMap.put("貴", 15f);
-        keywordMap.put("CP值低", 20f);
-        keywordMap.put("失望", 15f);
-        keywordMap.put("不會再來", 20f);
-        keywordMap.put("不會特別來", 20f);
-        keywordMap.put("不會特地來", 20f);
-        keywordMap.put("不用特別來", 20f);
-        keywordMap.put("不用特地來", 20f);
-        keywordMap.put("不用特別排", 20f);
-        keywordMap.put("我家", 15f);
-        keywordMap.put("家", 10f);
-        keywordMap.put("至少", 15f);
-        keywordMap.put("蚊子", 15f);
-        keywordMap.put("XD", 10f);
+        keywordMap.put("難吃", 1.5f);
+        keywordMap.put("不推", 1.5f);
+        keywordMap.put("抱怨", 2f);
+        keywordMap.put("雷", 1f);
+        keywordMap.put("盤", 1f);
+        keywordMap.put("貴", 1.5f);
+        keywordMap.put("CP值低", 2f);
+        keywordMap.put("失望", 1.5f);
+        keywordMap.put("不會再來", 2f);
+        keywordMap.put("不會特別來", 2f);
+        keywordMap.put("不會特地來", 2f);
+        keywordMap.put("不用特別來", 2f);
+        keywordMap.put("不用特地來", 2f);
+        keywordMap.put("不用特別排", 2f);
+        keywordMap.put("我家", 1.5f);
+        keywordMap.put("家", 1f);
+        keywordMap.put("至少", 1.5f);
+        keywordMap.put("蚊子", 1.5f);
+        keywordMap.put("XD", 1f);
 
         // --- 真實體驗訊號 (中度加分) ---
-        keywordMap.put("普通", 20f);
-        keywordMap.put("還行", 5f);
-        keywordMap.put("排隊", 3f);
-        keywordMap.put("排隊時間", 20f);
-        keywordMap.put("等待時間", 20f);
-        keywordMap.put("等很久", 10f);
-        keywordMap.put("態度", 5f);
-        keywordMap.put("回訪", 10f);
+        keywordMap.put("普通", 2f);
+        keywordMap.put("還行", 0.5f);
+        keywordMap.put("排隊", 0.3f);
+        keywordMap.put("排隊時間", 2f);
+        keywordMap.put("等待時間", 2f);
+        keywordMap.put("等很久", 1f);
+        keywordMap.put("態度", 0.5f);
+        keywordMap.put("回訪", 1f);
 
         // --- PTT 鄉民用語 (高真實度的情緒表達) ---
-        keywordMap.put("大推", 6f);
-        keywordMap.put("神", 10f);
-        keywordMap.put("屌打", 9f);
-        keywordMap.put("頂", 8f);
+        keywordMap.put("大推", 0.6f);
+        keywordMap.put("神", 1f);
+        keywordMap.put("屌打", 0.9f);
+        keywordMap.put("頂", 0.8f);
 
         // --- 一般正面體驗 (中度加分，需小心業配混用) ---
-        keywordMap.put("驚艷", 5f);
-        keywordMap.put("CP值高", 6f);
-        keywordMap.put("吃得飽", 5f);
-        keywordMap.put("不錯", 5f);
-        keywordMap.put("喜歡", 3f);
-        keywordMap.put("好喝", 3f);
-        keywordMap.put("好吃", 3f);
+        keywordMap.put("驚艷", 0.5f);
+        keywordMap.put("CP值高", 0.6f);
+        keywordMap.put("吃得飽", 0.5f);
+        keywordMap.put("不錯", 0.5f);
+        keywordMap.put("喜歡", 0.3f);
+        keywordMap.put("好喝", 0.3f);
+        keywordMap.put("好吃", 0.3f);
 
         return keywordMap;
     }
