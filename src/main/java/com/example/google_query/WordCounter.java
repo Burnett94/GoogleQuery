@@ -1,4 +1,5 @@
 package com.example.google_query;
+//test
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -6,6 +7,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
 
 public class WordCounter {
     private String urlStr;
@@ -19,7 +21,8 @@ public class WordCounter {
         URL url = new URL(this.urlStr);
         URLConnection conn = url.openConnection();
         InputStream in = conn.getInputStream();
-        BufferedReader br = new BufferedReader(new InputStreamReader(in));
+        // 指定 UTF-8 編碼以支援各種語言（包括中文、阿拉伯文等）
+        BufferedReader br = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
 
         String retVal = "";
 
@@ -81,9 +84,9 @@ public class WordCounter {
         }
 
         // To do a case-insensitive search, we turn the whole content and keyword into
-        // upper-case:
-        content = content.toUpperCase();
-        keyword = keyword.toUpperCase();
+        // upper-case: 使用 Locale.ROOT 以避免語言特定的轉換問題，支援各種 Unicode 字符
+        content = content.toUpperCase(java.util.Locale.ROOT);
+        keyword = keyword.toUpperCase(java.util.Locale.ROOT);
 
         int retVal = 0;
         // 1. calculates appearances of keyword (Bonus: Implement Boyer-Moore Algorithm)
