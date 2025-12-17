@@ -84,7 +84,7 @@ public class SearchController {
         String apiUrl = UriComponentsBuilder.fromUriString(url)
                 .queryParam("key", apiKey)
                 .queryParam("cx", cx)
-                .queryParam("q", query + " 評價")
+                .queryParam("q", query + " 餐廳推薦")
                 .queryParam("num", 5) // ⚠️ 為了速度，我們先抓前 5 筆就好 (不然會跑太久)
                 .build().toUriString();
 
