@@ -74,18 +74,28 @@ public class SearchController {
         return performDeepDive(parentUrl, 10); // 單獨呼叫時，抓 10 個子網頁
     }
 
-    // --- 主搜尋 API (現在包含深度挖掘功能) ---
+    // --- 主搜尋 API (包含翻譯功能 + 深度挖掘) ---
     @GetMapping("/search")
     public ArrayList<SearchItem> search(@RequestParam(value = "q", required = false) String query) {
-        System.out.println("\n🔥🔥🔥 [MainSearch] 查詢: " + query);
+        System.out.println("\n🔥🔥🔥 [MainSearch] 原始查詢: " + query);
         if (query == null || query.trim().isEmpty()) return new ArrayList<>();
 
+        // --- 1. 翻譯邏輯 (新增部分) ---
+        TranslationHandler translator = new TranslationHandler();
+        if (translator.needsTranslation(query)) {
+            System.out.println("  ➜ 偵測到非中文輸入，準備翻譯...");
+            String translatedQuery = translator.translateToChinese(query);
+            System.out.println("  ➜ 翻譯結果: [" + query + "] -> [" + translatedQuery + "]");
+            query = translatedQuery; // 更新關鍵字為中文
+        }
+
+        // --- 2. Google Search ---
         String url = "https://www.googleapis.com/customsearch/v1";
         String apiUrl = UriComponentsBuilder.fromUriString(url)
                 .queryParam("key", apiKey)
                 .queryParam("cx", cx)
                 .queryParam("q", query + " 餐廳推薦")
-                .queryParam("num", 5) // ⚠️ 為了速度，我們先抓前 5 筆就好 (不然會跑太久)
+                .queryParam("num", 5)
                 .build().toUriString();
 
         try {
@@ -105,7 +115,7 @@ public class SearchController {
                     WordCounter mainCounter = new WordCounter(item.getLink());
                     double mainScore = calculateScore(mainCounter, keywordMap, "Main");
                     
-                    // 2. 🔥【重點修改】自動往下挖！抓取該主網頁底下的連結
+                    // 2. 自動往下挖！抓取該主網頁底下的連結
                     Set<String> subLinks = mainCounter.getHyperlinks();
                     System.out.println("      (發現 " + subLinks.size() + " 個子連結，隨機抽樣分析 3 個...)");
 
@@ -113,12 +123,11 @@ public class SearchController {
                     double subTotalScore = 0;
                     
                     for (String subLink : subLinks) {
-                        if (subCount >= 3) break; // 每個結果只挖 3 個子網頁，避免跑太久
+                        if (subCount >= 3) break;
                         if (subLink.equals(item.getLink())) continue;
 
                         try {
                             WordCounter subCounter = new WordCounter(subLink);
-                            // 這裡會印出 └── [子網頁]
                             double sScore = calculateScore(subCounter, keywordMap, "Sub");
                             subTotalScore += sScore;
                             subCount++;
@@ -127,10 +136,10 @@ public class SearchController {
                         }
                     }
 
-                    // 3. 整合分數 (主網頁 + 子網頁平均)
+                    // 3. 整合分數
                     double finalScore = mainScore;
                     if (subCount > 0) {
-                        finalScore = (mainScore + (subTotalScore / subCount)) / 2; // 取平均
+                        finalScore = (mainScore + (subTotalScore / subCount)) / 2;
                         System.out.println("      => 修正後總分 (含子網頁): " + String.format("%.2f", finalScore));
                     }
                     
@@ -186,13 +195,11 @@ public class SearchController {
         return sorted;
     }
 
-    // --- 計算分數並印出詳細 Log (包含縮排) ---
+    // --- 計算分數並印出詳細 Log ---
     private double calculateScore(WordCounter counter, Map<String, Float> keywords, String type) throws IOException {
         double total = 0;
         int hits = 0;
-        StringBuilder sb = new StringBuilder();
         
-        // 根據類型決定縮排和前綴
         String prefix = "Sub".equals(type) ? "      └── [子網頁命中] " : "      [主網頁命中] ";
 
         for (Map.Entry<String, Float> entry : keywords.entrySet()) {
@@ -201,7 +208,6 @@ public class SearchController {
                 if (c > 0) {
                     total += c * entry.getValue();
                     hits++;
-                    // 印出每一條命中的關鍵字
                     System.out.println(prefix + entry.getKey() + " x" + c + " (+" + (c*entry.getValue()) + ")");
                 }
             } catch (Exception e) {}
@@ -209,7 +215,6 @@ public class SearchController {
         
         double finalScore = (hits > 0) ? (total / hits) : 0.0;
         
-        // 只有在真的有命中時，或是在主網頁分析時才印出總結，避免畫面太亂
         if (hits > 0) {
             String indent = "Sub".equals(type) ? "          " : "      ";
             System.out.println(indent + "=> 得分: " + String.format("%.2f", finalScore));
