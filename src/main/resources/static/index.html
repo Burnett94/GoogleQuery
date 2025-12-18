@@ -32,6 +32,9 @@
             padding: 40px 20px;
             width: 100%;
             max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         h1 {
@@ -47,22 +50,29 @@
             font-size: 1.1rem;
         }
 
-        /* --- 修改這裡：使用 Grid 讓按鈕靠右 --- */
+        /* --- 圖片樣式：設定寬度、圓角與陰影 --- */
+        .header-image {
+            width: 100%;           
+            max-width: 600px;      /* 限制最大寬度 */
+            height: auto;          
+            border-radius: 12px;   
+            margin: 25px 0;        
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5); 
+            object-fit: cover;     
+        }
+
+        /* --- 搜尋框樣式：使用 Grid 讓按鈕強制靠右 --- */
         .search-box {
-            display: grid; /* 改用 Grid */
-            grid-template-columns: 1fr auto; /* 左邊輸入框自動填滿(1fr)，右邊按鈕自動調整(auto) */
-            align-items: center; /* 垂直置中 */
+            display: grid;
+            grid-template-columns: 1fr auto; /* 左邊輸入框自動填滿，右邊按鈕自動調整 */
+            align-items: center;
             gap: 10px;
-            margin-top: 30px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
             border-radius: 50px;
             background: var(--card-bg);
             padding: 5px;
-            /* 確保這個容器有足夠寬度 */
             width: 100%; 
-            max-width: 600px; /* 限制最大寬度以免太長 */
-            margin-left: auto;
-            margin-right: auto;
+            max-width: 600px;
         }
 
         input {
@@ -71,10 +81,9 @@
             color: white;
             padding: 15px 25px;
             font-size: 1.1rem;
-            width: 100%; /* 修改這裡：讓輸入框填滿剩下的網格空間 */
+            width: 100%; /* 讓輸入框填滿剩下的空間 */
             outline: none;
         }
-        /* ----------------------------------- */
 
         button {
             background-color: var(--accent);
@@ -86,7 +95,7 @@
             font-weight: bold;
             cursor: pointer;
             transition: transform 0.2s, background 0.2s;
-            white-space: nowrap; /* 確保按鈕文字不換行 */
+            white-space: nowrap; /* 禁止文字換行 */
         }
 
         button:hover {
@@ -207,6 +216,8 @@
         <div class="subtitle">Deep Dive Crawler & Semantic Analysis</div>
         <div class="subtitle" style="font-size: 0.9rem; margin-top:5px;">拒絕業配，還原真相</div>
 
+        <img src="toyz超歌.webp" alt="美食公道伯行動中" class="header-image">
+
         <div class="search-box">
             <input type="text" id="searchInput" placeholder="輸入地點或食物 (例: 台中 火鍋)..." onkeypress="handleEnter(event)">
             <button onclick="performSearch()">開始公審</button>
@@ -235,7 +246,6 @@
             const query = document.getElementById('searchInput').value.trim();
             if (!query) return alert("請輸入關鍵字！");
 
-            // UI 切換到讀取狀態
             const resultsDiv = document.getElementById('results');
             const loadingDiv = document.getElementById('loading');
             const btn = document.querySelector('button');
@@ -247,7 +257,6 @@
             btn.style.background = "#666";
 
             try {
-                // 發送請求給後端
                 const response = await fetch(`${API_URL}?q=${encodeURIComponent(query)}`);
                 const data = await response.json();
 
@@ -273,11 +282,10 @@
 
             items.forEach((item, index) => {
                 const score = parseFloat(item.score);
-                let color = "var(--score-mid)"; // 預設普通
+                let color = "var(--score-mid)"; 
                 let status = "普通";
                 let borderColor = "#888";
 
-                // 分數邏輯 (可依你的權重設定調整)
                 if (score >= 3.0) {
                     color = "var(--score-high)";
                     status = "公道伯推薦";
@@ -288,11 +296,9 @@
                     borderColor = color;
                 }
 
-                // 建立卡片 HTML
                 const card = document.createElement('div');
                 card.className = 'card';
                 card.style.borderLeftColor = borderColor;
-                // 讓卡片依序出現
                 card.style.animationDelay = `${index * 0.1}s`; 
 
                 card.innerHTML = `
